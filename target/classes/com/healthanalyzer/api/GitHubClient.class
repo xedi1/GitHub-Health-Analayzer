@@ -1,0 +1,361 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.api;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.healthanalyzer.config.AppConfig;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class GitHubClient {
+   private static final Logger log = LoggerFactory.getLogger(GitHubClient.class);
+   private static final String GITHUB_API_BASE = "https://api.github.com";
+   private static final String GITHUB_API_VERSION = "2022-11-28";
+   private final OkHttpClient httpClient;
+   private final Gson gson;
+   private final AppConfig config;
+   private RateLimitInfo rateLimitInfo;
+
+   public GitHubClient(AppConfig config) {
+      this.config = config;
+      this.httpClient = (new OkHttpClient.Builder()).connectTimeout(config.requestTimeout()).readTimeout(config.requestTimeout()).writeTimeout(config.requestTimeout()).addInterceptor((chain) -> {
+         Request.Builder request = chain.request().newBuilder().addHeader("Accept", "application/vnd.github+json").addHeader("X-GitHub-Api-Version", "2022-11-28");
+         if (config.githubToken() != null && !config.githubToken().isEmpty()) {
+            request.addHeader("Authorization", "Bearer " + config.githubToken());
+         }
+
+         return chain.proceed(request.build());
+      }).build();
+      this.gson = (new GsonBuilder()).setLenient().create();
+      this.rateLimitInfo = new RateLimitInfo();
+   }
+
+   public JsonObject getRepo(String owner, String repo) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s", owner, repo);
+      return this.makeRequest(endpoint);
+   }
+
+   public JsonObject getRepoWithCommunityProfile(String owner, String repo) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s/community/profile", owner, repo);
+
+      try {
+         return this.makeRequest(endpoint);
+      } catch (GitHubApiException e) {
+         if (e.isNotFound()) {
+            log.debug("Community profile not available for {}/{}", owner, repo);
+            return null;
+         } else {
+            throw e;
+         }
+      }
+   }
+
+   public List<JsonObject> getContributors(String owner, String repo) throws GitHubApiException {
+      return this.paginate(String.format("/repos/%s/%s/contributors", owner, repo));
+   }
+
+   public List<JsonObject> getCommits(String owner, String repo, String branch, int days) {
+      String endpoint = String.format("/repos/%s/%s/commits", owner, repo);
+      String since = Instant.now().minus(Duration.ofDays((long)days)).toString();
+      return this.paginate(endpoint + "?since=" + since + "&per_page=100");
+   }
+
+   public JsonObject getCommitActivity(String owner, String repo) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s/stats/commit_activity", owner, repo);
+
+      try {
+         return this.makeRequest(endpoint);
+      } catch (GitHubApiException e) {
+         log.warn("Commit activity not available: {}", e.getMessage());
+         return null;
+      }
+   }
+
+   public List<JsonObject> getReleases(String owner, String repo) throws GitHubApiException {
+      return this.paginate(String.format("/repos/%s/%s/releases", owner, repo));
+   }
+
+   public List<JsonObject> getIssues(String owner, String repo, String state, int days) {
+      String endpoint = String.format("/repos/%s/%s/issues?state=%s&since=%s&per_page=100", owner, repo, state, Instant.now().minus(Duration.ofDays((long)days)).toString());
+      return this.paginate(endpoint);
+   }
+
+   public JsonObject getIssuesStats(String owner, String repo) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s", owner, repo);
+      return this.makeRequest(endpoint);
+   }
+
+   public List<JsonObject> getPullRequests(String owner, String repo, String state) {
+      String endpoint = String.format("/repos/%s/%s/pulls?state=%s&per_page=100", owner, repo, state);
+      return this.paginate(endpoint);
+   }
+
+   public JsonArray getContents(String owner, String repo, String path) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s/contents/%s", owner, repo, path);
+
+      try {
+         return this.makeRequestArray(endpoint);
+      } catch (GitHubApiException e) {
+         if (e.isNotFound()) {
+            return null;
+         } else {
+            throw e;
+         }
+      }
+   }
+
+   public JsonObject getContent(String owner, String repo, String path) throws GitHubApiException {
+      String endpoint = String.format("/repos/%s/%s/contents/%s", owner, repo, path);
+      return this.makeRequest(endpoint);
+   }
+
+   public JsonObject getDefaultBranch(String owner, String repo) throws GitHubApiException {
+      return this.getRepo(owner, repo);
+   }
+
+   private JsonObject makeRequest(String endpoint) throws GitHubApiException {
+      this.waitForRateLimit();
+      String url = "https://api.github.com" + endpoint;
+      log.debug("GET {}", url);
+      Request request = (new Request.Builder()).url(url).get().build();
+
+      try {
+         Throwable var4 = null;
+         Object var5 = null;
+
+         try {
+            Response response = this.httpClient.newCall(request).execute();
+
+            JsonObject var10000;
+            try {
+               this.updateRateLimitInfo(response);
+               int statusCode = response.code();
+               String body = response.body() != null ? response.body().string() : "";
+               if (!response.isSuccessful()) {
+                  log.error("API request failed: {} - Status: {}", url, statusCode);
+                  throw new GitHubApiException("API request failed: " + response.message(), statusCode, endpoint);
+               }
+
+               if (!body.isEmpty()) {
+                  var10000 = (JsonObject)this.gson.fromJson(body, JsonObject.class);
+                  return var10000;
+               }
+
+               var10000 = new JsonObject();
+            } finally {
+               if (response != null) {
+                  response.close();
+               }
+
+            }
+
+            return var10000;
+         } catch (Throwable var18) {
+            if (var4 == null) {
+               var4 = var18;
+            } else if (var4 != var18) {
+               var4.addSuppressed(var18);
+            }
+
+            throw var4;
+         }
+      } catch (IOException e) {
+         throw new GitHubApiException("Network error: " + e.getMessage(), -1, endpoint, e);
+      } catch (Exception e) {
+         throw new GitHubApiException("Parse error: " + e.getMessage(), -1, endpoint, e);
+      }
+   }
+
+   private JsonArray makeRequestArray(String endpoint) throws GitHubApiException {
+      this.waitForRateLimit();
+      String url = "https://api.github.com" + endpoint;
+      log.debug("GET {}", url);
+      Request request = (new Request.Builder()).url(url).get().build();
+
+      try {
+         Throwable var4 = null;
+         Object var5 = null;
+
+         try {
+            Response response = this.httpClient.newCall(request).execute();
+
+            JsonArray var10000;
+            try {
+               this.updateRateLimitInfo(response);
+               int statusCode = response.code();
+               String body = response.body() != null ? response.body().string() : "";
+               if (!response.isSuccessful()) {
+                  throw new GitHubApiException("API request failed: " + response.message(), statusCode, endpoint);
+               }
+
+               if (!body.isEmpty()) {
+                  var10000 = (JsonArray)this.gson.fromJson(body, JsonArray.class);
+                  return var10000;
+               }
+
+               var10000 = new JsonArray();
+            } finally {
+               if (response != null) {
+                  response.close();
+               }
+
+            }
+
+            return var10000;
+         } catch (Throwable var18) {
+            if (var4 == null) {
+               var4 = var18;
+            } else if (var4 != var18) {
+               var4.addSuppressed(var18);
+            }
+
+            throw var4;
+         }
+      } catch (IOException e) {
+         throw new GitHubApiException("Network error: " + e.getMessage(), -1, endpoint, e);
+      } catch (Exception e) {
+         throw new GitHubApiException("Parse error: " + e.getMessage(), -1, endpoint, e);
+      }
+   }
+
+   private List<JsonObject> paginate(String endpoint) {
+      List<JsonObject> results = new ArrayList();
+      String baseUrl = "https://api.github.com" + endpoint;
+      String url = baseUrl;
+      int page = 1;
+      int maxPages = 10;
+
+      while(url != null && page <= maxPages) {
+         this.waitForRateLimit();
+         log.debug("GET {} (page {})", url, page);
+         Request request = (new Request.Builder()).url(url).get().build();
+
+         try {
+            Throwable var8 = null;
+            Object var9 = null;
+
+            try {
+               Response response = this.httpClient.newCall(request).execute();
+
+               try {
+                  this.updateRateLimitInfo(response);
+                  int statusCode = response.code();
+                  if (!response.isSuccessful()) {
+                     log.warn("Pagination request failed: {} - Status: {}", url, statusCode);
+                     break;
+                  }
+
+                  String body = response.body() != null ? response.body().string() : "";
+                  if (body.isEmpty()) {
+                     break;
+                  }
+
+                  JsonArray arr = (JsonArray)this.gson.fromJson(body, JsonArray.class);
+                  if (arr == null || arr.size() == 0) {
+                     break;
+                  }
+
+                  for(JsonElement elem : arr) {
+                     results.add(elem.getAsJsonObject());
+                  }
+
+                  String next = response.header("Link");
+                  if (next != null && next.contains("rel=\"next\"")) {
+                     String[] parts = next.split(",");
+
+                     for(String part : parts) {
+                        if (part.contains("rel=\"next\"")) {
+                           int start = part.indexOf("<");
+                           int end = part.indexOf(">");
+                           if (start >= 0 && end > start) {
+                              url = part.substring(start + 1, end);
+                              ++page;
+                              break;
+                           }
+                        }
+                     }
+                  } else {
+                     url = null;
+                  }
+               } finally {
+                  if (response != null) {
+                     response.close();
+                  }
+
+               }
+            } catch (Throwable var31) {
+               if (var8 == null) {
+                  var8 = var31;
+               } else if (var8 != var31) {
+                  var8.addSuppressed(var31);
+               }
+
+               throw var8;
+            }
+         } catch (IOException e) {
+            log.error("Pagination error: {}", e.getMessage());
+            break;
+         } catch (Exception e) {
+            log.error("Parse error during pagination: {}", e.getMessage());
+            break;
+         }
+      }
+
+      return results;
+   }
+
+   private void waitForRateLimit() {
+      if (this.rateLimitInfo.remaining <= 10) {
+         long waitTime = Math.max(0L, this.rateLimitInfo.resetTime - System.currentTimeMillis());
+         if (waitTime > 0L) {
+            log.info("Rate limit low, waiting {}ms", waitTime);
+
+            try {
+               Thread.sleep(waitTime + 1000L);
+            } catch (InterruptedException var4) {
+               Thread.currentThread().interrupt();
+            }
+         }
+      }
+
+   }
+
+   private void updateRateLimitInfo(Response response) {
+      String limit = response.header("X-RateLimit-Limit");
+      String remaining = response.header("X-RateLimit-Remaining");
+      String reset = response.header("X-RateLimit-Reset");
+      if (remaining != null) {
+         this.rateLimitInfo.remaining = Integer.parseInt(remaining);
+      }
+
+      if (reset != null) {
+         this.rateLimitInfo.resetTime = Long.parseLong(reset) * 1000L;
+      }
+
+      log.debug("Rate limit: {}/{}", remaining, limit);
+   }
+
+   public void close() {
+      this.httpClient.dispatcher().executorService().shutdown();
+      this.httpClient.connectionPool().evictAll();
+   }
+
+   private static class RateLimitInfo {
+      int remaining = 5000;
+      long resetTime = 0L;
+
+      private RateLimitInfo() {
+      }
+   }
+}
