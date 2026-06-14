@@ -1,0 +1,10 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.model;
+
+import java.time.Instant;
+
+public record CommitActivity(String sha, String message, String author, Instant timestamp, int week, int additions, int deletions) {
+   public boolean isRecent() {
+      return this.timestamp == null ? false : this.timestamp.isAfter(Instant.now().minusSeconds(7776000L));
+   }
+}
