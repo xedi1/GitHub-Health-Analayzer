@@ -1,0 +1,29 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.report;
+
+import com.healthanalyzer.model.HealthReport;
+import java.time.format.DateTimeFormatter;
+
+public class MarkdownReportFormatter {
+   private static final DateTimeFormatter DATE_FORMAT;
+
+   public MarkdownReportFormatter() {
+      throw new Error("Unresolved compilation problems: \n\tReportFormatter cannot be resolved to a type\n\tThe method format(HealthReport) of type MarkdownReportFormatter must override or implement a supertype method\n\tThe method getFormatName() of type MarkdownReportFormatter must override or implement a supertype method\n");
+   }
+
+   public String format(HealthReport var1) {
+      throw new Error("Unresolved compilation problem: \n\tThe method format(HealthReport) of type MarkdownReportFormatter must override or implement a supertype method\n");
+   }
+
+   public String getFormatName() {
+      throw new Error("Unresolved compilation problem: \n\tThe method getFormatName() of type MarkdownReportFormatter must override or implement a supertype method\n");
+   }
+
+   private String getStatusBadge(String var1) {
+      throw new Error("Unresolved compilation problem: \n");
+   }
+
+   private String boolIcon(boolean var1) {
+      throw new Error("Unresolved compilation problem: \n");
+   }
+}
