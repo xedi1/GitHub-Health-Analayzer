@@ -1,0 +1,89 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.scoring;
+
+import com.healthanalyzer.model.Contributor;
+import com.healthanalyzer.model.DocumentationInfo;
+import com.healthanalyzer.model.HealthScore;
+import com.healthanalyzer.model.HealthStatus;
+import com.healthanalyzer.model.IssueStats;
+import com.healthanalyzer.model.ReleaseInfo;
+import com.healthanalyzer.model.RepoInfo;
+import com.healthanalyzer.model.RepoMetrics;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class ScoringEngineTest {
+   private ScoringEngine scoringEngine;
+
+   ScoringEngineTest() {
+   }
+
+   @BeforeEach
+   void setUp() {
+      this.scoringEngine = new ScoringEngine();
+   }
+
+   @Test
+   void testActiveRepositoryGetsHighScore() {
+      RepoInfo repoInfo = new RepoInfo("owner/repo", "A great project", "Java", 1000, 200, 50, 10, 90, Instant.now().minus(5L, ChronoUnit.DAYS), Instant.now().minus(30L, ChronoUnit.DAYS), Instant.now().minus(5L, ChronoUnit.DAYS), false, false, false, "MIT", List.of("java", "project"), "main", "https://example.com");
+      Contributor contributor1 = new Contributor("user1", (String)null, (String)null, 500, (double)50.0F, 1);
+      Contributor contributor2 = new Contributor("user2", (String)null, (String)null, 300, (double)30.0F, 2);
+      Contributor contributor3 = new Contributor("user3", (String)null, (String)null, 200, (double)20.0F, 3);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of(contributor1, contributor2, contributor3)).issueStats(new IssueStats(10, 90, 10, 5, (double)2.0F, 0, 0)).releaseInfo(new ReleaseInfo("v1.0.0", Instant.now().minus(30L, ChronoUnit.DAYS), 6, (double)60.0F, false, false, "Release notes")).documentationInfo(new DocumentationInfo(true, "README.md", 5000, true, true, true, true, true, true, "MIT", true, false, false)).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertTrue(score.totalScore() >= 60, "Active repo should have score >= 60");
+      Assertions.assertTrue(score.status() == HealthStatus.ACTIVE || score.status() == HealthStatus.MAINTAINED, "Active repo should be ACTIVE or MAINTAINED, got: " + String.valueOf(score.status()));
+   }
+
+   @Test
+   void testZombieRepositoryDetection() {
+      RepoInfo repoInfo = new RepoInfo("owner/popular-repo", "Was popular but now dead", "JavaScript", 5000, 1000, 100, 50, 100, Instant.now().minus(730L, ChronoUnit.DAYS), Instant.now().minus(730L, ChronoUnit.DAYS), Instant.now().minus(400L, ChronoUnit.DAYS), false, false, false, "MIT", List.of(), "main", (String)null);
+      Contributor singleContributor = new Contributor("maintainer", (String)null, (String)null, 5000, (double)95.0F, 1);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of(singleContributor)).issueStats(new IssueStats(50, 100, 0, 0, (double)0.0F, 45, 40)).releaseInfo(new ReleaseInfo("v0.9.0", Instant.now().minus(365L, ChronoUnit.DAYS), 1, (double)0.0F, true, false, (String)null)).documentationInfo(new DocumentationInfo(false, (String)null, 0, false, false, false, false, false, false, (String)null, false, false, false)).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertTrue(score.totalScore() < 40, "Zombie repo should have low score");
+      Assertions.assertTrue(score.isZombie() || score.status() == HealthStatus.DEAD);
+   }
+
+   @Test
+   void testSingleContributorRisk() {
+      RepoInfo repoInfo = new RepoInfo("owner/single-maintainer", "Project with one main maintainer", "Python", 100, 20, 10, 5, 20, Instant.now().minus(180L, ChronoUnit.DAYS), Instant.now().minus(5L, ChronoUnit.DAYS), Instant.now().minus(5L, ChronoUnit.DAYS), false, false, false, "MIT", List.of(), "main", (String)null);
+      Contributor dominant = new Contributor("maintainer", (String)null, (String)null, 950, (double)95.0F, 1);
+      Contributor minor1 = new Contributor("contributor1", (String)null, (String)null, 30, (double)3.0F, 2);
+      Contributor minor2 = new Contributor("contributor2", (String)null, (String)null, 20, (double)2.0F, 3);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of(dominant, minor1, minor2)).issueStats(new IssueStats(5, 20, 5, 3, (double)1.0F, 0, 0)).releaseInfo(new ReleaseInfo("v1.0.0", Instant.now().minus(60L, ChronoUnit.DAYS), 4, (double)90.0F, false, false, "Release")).documentationInfo(new DocumentationInfo(true, "README.md", 2000, true, true, true, true, true, true, "MIT", true, false, false)).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertTrue(score.contributorScore() <= 10, "Single maintainer risk should reduce score");
+      boolean hasConcentrationSignal = score.signals().stream().anyMatch((s) -> s.category().equals("contributors") && !s.positive());
+      Assertions.assertTrue(hasConcentrationSignal, "Should have signal about contributor concentration");
+   }
+
+   @Test
+   void testArchivedRepositoryIsDead() {
+      RepoInfo repoInfo = new RepoInfo("owner/archived-repo", "An archived repository", "Java", 500, 100, 20, 0, 50, Instant.now().minus(1000L, ChronoUnit.DAYS), Instant.now().minus(500L, ChronoUnit.DAYS), Instant.now().minus(500L, ChronoUnit.DAYS), true, false, false, "MIT", List.of(), "main", (String)null);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of()).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertEquals(HealthStatus.DEAD, score.status());
+   }
+
+   @Test
+   void testDocumentationScore() {
+      RepoInfo repoInfo = new RepoInfo("owner/well-documented", "Well documented project", "Go", 200, 50, 15, 3, 30, Instant.now().minus(365L, ChronoUnit.DAYS), Instant.now().minus(7L, ChronoUnit.DAYS), Instant.now().minus(7L, ChronoUnit.DAYS), false, false, false, "MIT", List.of(), "main", (String)null);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of(new Contributor("user1", (String)null, (String)null, 100, (double)100.0F, 1))).documentationInfo(new DocumentationInfo(true, "README.md", 8000, true, true, true, true, true, true, "MIT", true, false, false)).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertEquals(15, score.documentationScore(), "Full documentation should get max score");
+   }
+
+   @Test
+   void testEmptyRepository() {
+      RepoInfo repoInfo = new RepoInfo("owner/empty", "Empty repository", (String)null, 0, 0, 0, 0, 0, Instant.now(), Instant.now(), Instant.now(), false, false, false, (String)null, List.of(), "main", (String)null);
+      RepoMetrics metrics = RepoMetrics.builder().repoInfo(repoInfo).contributors(List.of()).documentationInfo(new DocumentationInfo(false, (String)null, 0, false, false, false, false, false, false, (String)null, false, false, false)).build();
+      HealthScore score = this.scoringEngine.calculateScore(metrics);
+      Assertions.assertTrue(score.totalScore() < 30, "Empty repo should have low score");
+      Assertions.assertEquals(HealthStatus.DEAD, score.status());
+   }
+}
