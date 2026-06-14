@@ -1,0 +1,12 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.model;
+
+public record CommunityHealth(int healthPercentage, boolean hasWiki, int followerCount, int memberCount, String description, boolean isFriendly) {
+   public boolean isGood() {
+      return this.healthPercentage >= 50;
+   }
+
+   public static CommunityHealth empty() {
+      return new CommunityHealth(0, false, 0, 0, (String)null, false);
+   }
+}
