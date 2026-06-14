@@ -1,0 +1,42 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.api;
+
+import com.healthanalyzer.config.AppConfig;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+class GitHubClientTest {
+   GitHubClientTest() {
+   }
+
+   @Test
+   void testClientCreation() {
+      AppConfig config = AppConfig.builder().githubToken("test-token").build();
+      GitHubClient client = new GitHubClient(config);
+      Assertions.assertNotNull(client);
+      client.close();
+   }
+
+   @Test
+   void testClientWithNullToken() {
+      AppConfig config = AppConfig.builder().githubToken((String)null).build();
+      GitHubClient client = new GitHubClient(config);
+      Assertions.assertNotNull(client);
+      client.close();
+   }
+
+   @Test
+   void testExceptionProperties() {
+      GitHubApiException rateLimited = new GitHubApiException("Rate limited", 403, "/repos/owner/repo");
+      Assertions.assertTrue(rateLimited.isRateLimited());
+      Assertions.assertFalse(rateLimited.isNotFound());
+      Assertions.assertFalse(rateLimited.isServerError());
+      GitHubApiException notFound = new GitHubApiException("Not found", 404, "/repos/owner/repo");
+      Assertions.assertFalse(notFound.isRateLimited());
+      Assertions.assertTrue(notFound.isNotFound());
+      GitHubApiException serverError = new GitHubApiException("Server error", 500, "/repos/owner/repo");
+      Assertions.assertFalse(serverError.isRateLimited());
+      Assertions.assertFalse(serverError.isNotFound());
+      Assertions.assertTrue(serverError.isServerError());
+   }
+}
