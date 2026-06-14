@@ -1,0 +1,167 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.cli;
+
+import com.healthanalyzer.config.AppConfig;
+import com.healthanalyzer.config.OutputFormat;
+import com.healthanalyzer.model.HealthReport;
+import com.healthanalyzer.report.ReportService;
+import com.healthanalyzer.service.HealthAnalysisService;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+
+@Command(
+   name = "analyze-batch",
+   description = {"Analyze multiple GitHub repositories from a file"},
+   mixinStandardHelpOptions = true
+)
+public class AnalyzeBatchCommand implements Callable<Integer> {
+   @Option(
+      names = {"-t", "--token"},
+      description = {"GitHub API token"}
+   )
+   private String token;
+   @Option(
+      names = {"-f", "--format"},
+      description = {"Output format (table, json, markdown)"}
+   )
+   private String format = "table";
+   @Option(
+      names = {"-o", "--output"},
+      description = {"Output file path"}
+   )
+   private String outputFile;
+   @Option(
+      names = {"-v", "--verbose"},
+      description = {"Verbose logging"}
+   )
+   private boolean verbose;
+   @Parameters(
+      paramLabel = "FILE",
+      description = {"File containing repository list (one per line)"}
+   )
+   private String filePath;
+
+   public AnalyzeBatchCommand() {
+   }
+
+   public Integer call() throws Exception {
+      System.out.println("\u001b[96m\n\ud83d\udd0d \u001b[1mStarting Batch Health Analysis...\u001b[0m");
+      if (this.filePath != null && !this.filePath.isEmpty()) {
+         List<String> repos = this.readReposFromFile(this.filePath);
+         if (repos.isEmpty()) {
+            System.out.println("\u001b[91m❌ \u001b[1mError: No repositories found in file\u001b[0m");
+            return 1;
+         } else {
+            System.out.println("\u001b[92m\ud83d\udccb \u001b[97mFound \u001b[96m" + repos.size() + "\u001b[97m repositories to analyze\u001b[0m");
+            String githubToken = this.token;
+            if (githubToken == null || githubToken.isEmpty()) {
+               githubToken = System.getenv("GITHUB_TOKEN");
+               if (githubToken != null && !githubToken.isEmpty()) {
+                  System.out.println("\u001b[92m✓ \u001b[97mUsing GitHub token from environment\u001b[0m");
+               }
+            }
+
+            AppConfig config = AppConfig.builder().githubToken(githubToken).verboseLogging(this.verbose).defaultFormat(OutputFormat.fromString(this.format)).build();
+            HealthAnalysisService service = new HealthAnalysisService(config);
+            ReportService reportService = new ReportService();
+
+            Integer var19;
+            try {
+               try {
+                  List<HealthReport> reports = new ArrayList();
+                  int success = 0;
+                  int failed = 0;
+
+                  for(String repoPath : repos) {
+                     repoPath = repoPath.trim();
+                     if (!repoPath.isEmpty() && !repoPath.startsWith("#")) {
+                        try {
+                           String[] parts = repoPath.split("/");
+                           if (parts.length >= 2) {
+                              String owner = parts[parts.length - 2];
+                              String repo = parts[parts.length - 1].replace(".git", "");
+                              System.out.println("\u001b[93m\n⏳ \u001b[97mAnalyzing: \u001b[96m" + repoPath + "\u001b[0m");
+                              HealthReport report = service.analyze(owner, repo);
+                              reports.add(report);
+                              ++success;
+                              int score = report.healthScore().totalScore();
+                              String statusLabel = report.healthScore().status().label();
+                              String scoreColor = score >= 80 ? "\u001b[92m" : (score >= 60 ? "\u001b[93m" : (score >= 35 ? "\u001b[95m" : "\u001b[91m"));
+                              System.out.println("\u001b[92m  ✓ \u001b[97mScore: " + scoreColor + score + "\u001b[97m/100 \u001b[97m[" + statusLabel + "]\u001b[0m");
+                           }
+                        } catch (Exception e) {
+                           System.out.println("\u001b[91m  ✗ \u001b[97mFailed: " + e.getMessage() + "\u001b[0m");
+                           ++failed;
+                        }
+                     }
+                  }
+
+                  System.out.println("\n\u001b[94m" + "═".repeat(60) + "\u001b[0m");
+                  System.out.println("\u001b[96m\u001b[1m  \ud83d\udcca Batch Analysis Complete\u001b[0m");
+                  System.out.println("\u001b[94m" + "═".repeat(60) + "\u001b[0m");
+                  System.out.println("\u001b[92m  ✅ Success: \u001b[97m" + success + "\u001b[0m");
+                  System.out.println("\u001b[91m  ❌ Failed: \u001b[97m" + failed + "\u001b[0m");
+                  System.out.println("\u001b[93m  \ud83d\udce6 Total: \u001b[97m" + repos.size() + "\u001b[0m");
+                  System.out.println("\u001b[94m" + "═".repeat(60) + "\u001b[0m");
+                  if (!reports.isEmpty()) {
+                     OutputFormat outputFormat = OutputFormat.fromString(this.format);
+                     String content = reportService.generateBatchReport(reports, outputFormat);
+                     if (this.outputFile != null && !this.outputFile.isEmpty()) {
+                        reportService.saveReport(content, this.outputFile);
+                        System.out.println("\u001b[92m\n✅ \u001b[1mReport saved to: \u001b[97m" + this.outputFile + "\u001b[0m");
+                     } else {
+                        reportService.printReport(content);
+                     }
+                  }
+
+                  System.out.println("\u001b[92m\n✅ \u001b[1mAll Done!\u001b[0m");
+                  System.out.println("\u001b[95m   Developed by: xEdi | https://github.com/xedi1\u001b[0m");
+                  System.out.println("\u001b[95m   LinkedIn: linkedin.com/in/hadi-gholipour\u001b[0m");
+                  var19 = failed > 0 ? 1 : 0;
+                  return var19;
+               } catch (Exception e) {
+                  System.out.println("\u001b[91m\n❌ \u001b[1mError: \u001b[97m" + e.getMessage() + "\u001b[0m");
+                  if (this.verbose) {
+                     e.printStackTrace();
+                  }
+               }
+
+               var19 = 1;
+            } finally {
+               service.close();
+            }
+
+            return var19;
+         }
+      } else {
+         System.out.println("\u001b[91m❌ \u001b[1mError: Input file is required\u001b[0m");
+         System.out.println("\u001b[97m   Usage: analyze-batch FILE\u001b[0m");
+         return 1;
+      }
+   }
+
+   private List<String> readReposFromFile(String filePath) throws IOException {
+      List<String> repos = new ArrayList();
+      Path path = Path.of(filePath);
+      if (!Files.exists(path, new LinkOption[0])) {
+         throw new IOException("File not found: " + filePath);
+      } else {
+         for(String line : Files.readAllLines(path)) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
+               repos.add(trimmed);
+            }
+         }
+
+         return repos;
+      }
+   }
+}
