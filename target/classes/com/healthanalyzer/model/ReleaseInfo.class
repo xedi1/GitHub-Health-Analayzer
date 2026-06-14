@@ -1,0 +1,27 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.model;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+public record ReleaseInfo(String latestVersion, Instant latestDate, int releasesLastYear, double avgDaysBetweenReleases, boolean hasPrerelease, boolean isDraft, String releaseNotes) {
+   public boolean hasRecentRelease() {
+      if (this.latestDate == null) {
+         return false;
+      } else {
+         return ChronoUnit.DAYS.between(this.latestDate, Instant.now()) <= 90L;
+      }
+   }
+
+   public boolean hasRegularCadence() {
+      return this.releasesLastYear >= 2;
+   }
+
+   public long daysSinceLastRelease() {
+      return this.latestDate == null ? -1L : ChronoUnit.DAYS.between(this.latestDate, Instant.now());
+   }
+
+   public static ReleaseInfo empty() {
+      return new ReleaseInfo((String)null, (Instant)null, 0, (double)0.0F, false, false, (String)null);
+   }
+}
