@@ -1,0 +1,20 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.model;
+
+public record PullRequestStats(int totalOpen, int totalClosed, int recentlyMerged, int recentlyOpened, double avgMergeTimeDays, int stalePRs, double mergeRate) {
+   public int total() {
+      return this.totalOpen + this.totalClosed;
+   }
+
+   public boolean hasGoodMergeRate() {
+      return this.mergeRate >= 0.7;
+   }
+
+   public boolean hasBacklog() {
+      return this.stalePRs > 3;
+   }
+
+   public static PullRequestStats empty() {
+      return new PullRequestStats(0, 0, 0, 0, (double)0.0F, 0, (double)0.0F);
+   }
+}
