@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="com.healthanalyzer.api.GitHubClientTest" time="0.357" tests="3" errors="0" skipped="0" failures="0">
+  <properties>
+    <property name="java.specification.version" value="21"/>
+    <property name="sun.jnu.encoding" value="UTF-8"/>
+    <property name="java.class.path" value="/workspace/project/target/test-classes:/workspace/project/target/classes:/home/openhands/.m2/repository/com/squareup/okhttp3/okhttp/4.12.0/okhttp-4.12.0.jar:/home/openhands/.m2/repository/com/squareup/okio/okio/3.6.0/okio-3.6.0.jar:/home/openhands/.m2/repository/com/squareup/okio/okio-jvm/3.6.0/okio-jvm-3.6.0.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/home/openhands/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/home/openhands/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/home/openhands/.m2/repository/info/picocli/picocli/4.7.5/picocli-4.7.5.jar:/home/openhands/.m2/repository/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar:/home/openhands/.m2/repository/ch/qos/logback/logback-classic/1.4.11/logback-classic-1.4.11.jar:/home/openhands/.m2/repository/ch/qos/logback/logback-core/1.4.11/logback-core-1.4.11.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.1/junit-jupiter-5.10.1.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.1/junit-jupiter-api-5.10.1.jar:/home/openhands/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/openhands/.m2/repository/org/junit/platform/junit-platform-commons/1.10.1/junit-platform-commons-1.10.1.jar:/home/openhands/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.1/junit-jupiter-params-5.10.1.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.1/junit-jupiter-engine-5.10.1.jar:/home/openhands/.m2/repository/org/junit/platform/junit-platform-engine/1.10.1/junit-platform-engine-1.10.1.jar:/home/openhands/.m2/repository/org/mockito/mockito-core/5.8.0/mockito-core-5.8.0.jar:/home/openhands/.m2/repository/net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10.jar:/home/openhands/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10.jar:/home/openhands/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:"/>
+    <property name="java.vm.vendor" value="Debian"/>
+    <property name="sun.arch.data.model" value="64"/>
+    <property name="java.vendor.url" value="https://tracker.debian.org/openjdk-21"/>
+    <property name="user.timezone" value="Etc/UTC"/>
+    <property name="os.name" value="Linux"/>
+    <property name="java.vm.specification.version" value="21"/>
+    <property name="sun.java.launcher" value="SUN_STANDARD"/>
+    <property name="sun.boot.library.path" value="/usr/lib/jvm/java-21-openjdk-amd64/lib"/>
+    <property name="sun.java.command" value="/workspace/project/target/surefire/surefirebooter-20260610220939141_3.jar /workspace/project/target/surefire 2026-06-10T22-09-39_062-jvmRun1 surefire-20260610220939141_1tmp surefire_0-20260610220939141_2tmp"/>
+    <property name="jdk.debug" value="release"/>
+    <property name="surefire.test.class.path" value="/workspace/project/target/test-classes:/workspace/project/target/classes:/home/openhands/.m2/repository/com/squareup/okhttp3/okhttp/4.12.0/okhttp-4.12.0.jar:/home/openhands/.m2/repository/com/squareup/okio/okio/3.6.0/okio-3.6.0.jar:/home/openhands/.m2/repository/com/squareup/okio/okio-jvm/3.6.0/okio-jvm-3.6.0.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-common/1.9.10/kotlin-stdlib-common-1.9.10.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.21/kotlin-stdlib-jdk8-1.8.21.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.8.21/kotlin-stdlib-1.8.21.jar:/home/openhands/.m2/repository/org/jetbrains/annotations/13.0/annotations-13.0.jar:/home/openhands/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.21/kotlin-stdlib-jdk7-1.8.21.jar:/home/openhands/.m2/repository/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar:/home/openhands/.m2/repository/info/picocli/picocli/4.7.5/picocli-4.7.5.jar:/home/openhands/.m2/repository/org/slf4j/slf4j-api/2.0.9/slf4j-api-2.0.9.jar:/home/openhands/.m2/repository/ch/qos/logback/logback-classic/1.4.11/logback-classic-1.4.11.jar:/home/openhands/.m2/repository/ch/qos/logback/logback-core/1.4.11/logback-core-1.4.11.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.1/junit-jupiter-5.10.1.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.1/junit-jupiter-api-5.10.1.jar:/home/openhands/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/home/openhands/.m2/repository/org/junit/platform/junit-platform-commons/1.10.1/junit-platform-commons-1.10.1.jar:/home/openhands/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.1/junit-jupiter-params-5.10.1.jar:/home/openhands/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.1/junit-jupiter-engine-5.10.1.jar:/home/openhands/.m2/repository/org/junit/platform/junit-platform-engine/1.10.1/junit-platform-engine-1.10.1.jar:/home/openhands/.m2/repository/org/mockito/mockito-core/5.8.0/mockito-core-5.8.0.jar:/home/openhands/.m2/repository/net/bytebuddy/byte-buddy/1.14.10/byte-buddy-1.14.10.jar:/home/openhands/.m2/repository/net/bytebuddy/byte-buddy-agent/1.14.10/byte-buddy-agent-1.14.10.jar:/home/openhands/.m2/repository/org/objenesis/objenesis/3.3/objenesis-3.3.jar:"/>
+    <property name="sun.cpu.endian" value="little"/>
+    <property name="user.home" value="/home/openhands"/>
+    <property name="user.language" value="en"/>
+    <property name="java.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.version.date" value="2026-04-21"/>
+    <property name="java.home" value="/usr/lib/jvm/java-21-openjdk-amd64"/>
+    <property name="file.separator" value="/"/>
+    <property name="basedir" value="/workspace/project"/>
+    <property name="java.vm.compressedOopsMode" value="Zero based"/>
+    <property name="line.separator" value="&#10;"/>
+    <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
+    <property name="java.specification.name" value="Java Platform API Specification"/>
+    <property name="surefire.real.class.path" value="/workspace/project/target/surefire/surefirebooter-20260610220939141_3.jar"/>
+    <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
+    <property name="java.runtime.version" value="21.0.11+10-1-deb13u2-Debian"/>
+    <property name="user.name" value="openhands"/>
+    <property name="stdout.encoding" value="UTF-8"/>
+    <property name="path.separator" value=":"/>
+    <property name="os.version" value="6.8.0-1051-gke"/>
+    <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
+    <property name="file.encoding" value="UTF-8"/>
+    <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
+    <property name="localRepository" value="/home/openhands/.m2/repository"/>
+    <property name="java.vendor.url.bug" value="https://bugs.debian.org/openjdk-21"/>
+    <property name="java.io.tmpdir" value="/tmp"/>
+    <property name="java.version" value="21.0.11"/>
+    <property name="user.dir" value="/workspace/project"/>
+    <property name="os.arch" value="amd64"/>
+    <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
+    <property name="native.encoding" value="UTF-8"/>
+    <property name="java.library.path" value="/usr/lib/aarch64-linux-gnu:/usr/lib:/usr/lib/x86_64-linux-gnu::/usr/java/packages/lib:/usr/lib/x86_64-linux-gnu/jni:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/usr/lib/jni:/lib:/usr/lib"/>
+    <property name="stderr.encoding" value="UTF-8"/>
+    <property name="java.vm.info" value="mixed mode, sharing"/>
+    <property name="java.vendor" value="Debian"/>
+    <property name="java.vm.version" value="21.0.11+10-1-deb13u2-Debian"/>
+    <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
+    <property name="java.class.version" value="65.0"/>
+  </properties>
+  <testcase name="testClientWithNullToken" classname="com.healthanalyzer.api.GitHubClientTest" time="0.333">
+    <system-out><![CDATA[22:09:39,599 |-INFO in ch.qos.logback.classic.LoggerContext[default] - This is logback-classic version 1.4.11
+22:09:39,601 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - No custom configurators were discovered as a service.
+22:09:39,601 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - Trying to configure with ch.qos.logback.classic.joran.SerializedModelConfigurator
+22:09:39,602 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - Constructed configurator of type class ch.qos.logback.classic.joran.SerializedModelConfigurator
+22:09:39,621 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.scmo]
+22:09:39,621 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.scmo]
+22:09:39,626 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - ch.qos.logback.classic.joran.SerializedModelConfigurator.configure() call lasted 19 milliseconds. ExecutionStatus=INVOKE_NEXT_IF_ANY
+22:09:39,626 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - Trying to configure with ch.qos.logback.classic.util.DefaultJoranConfigurator
+22:09:39,626 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - Constructed configurator of type class ch.qos.logback.classic.util.DefaultJoranConfigurator
+22:09:39,626 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+22:09:39,628 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback.xml] at [file:/workspace/project/target/classes/logback.xml]
+22:09:39,683 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - Processing appender named [STDOUT]
+22:09:39,683 |-INFO in ch.qos.logback.core.model.processor.AppenderModelHandler - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+22:09:39,686 |-INFO in ch.qos.logback.core.model.processor.ImplicitModelHandler - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
+22:09:39,712 |-WARN in ch.qos.logback.core.model.processor.AppenderModelHandler - Appender named [FILE] not referenced. Skipping further processing.
+22:09:39,712 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [com.healthanalyzer] to INFO
+22:09:39,712 |-INFO in ch.qos.logback.classic.model.processor.LoggerModelHandler - Setting level of logger [com.healthanalyzer.api] to DEBUG
+22:09:39,712 |-INFO in ch.qos.logback.classic.model.processor.RootLoggerModelHandler - Setting level of ROOT logger to INFO
+22:09:39,712 |-INFO in ch.qos.logback.core.model.processor.AppenderRefModelHandler - Attaching appender named [STDOUT] to Logger[ROOT]
+22:09:39,713 |-INFO in ch.qos.logback.core.model.processor.DefaultProcessor@15d49048 - End of configuration.
+22:09:39,713 |-INFO in ch.qos.logback.classic.joran.JoranConfigurator@7098b907 - Registering current configuration as safe fallback point
+22:09:39,713 |-INFO in ch.qos.logback.classic.util.ContextInitializer@4470fbd6 - ch.qos.logback.classic.util.DefaultJoranConfigurator.configure() call lasted 87 milliseconds. ExecutionStatus=DO_NOT_INVOKE_NEXT_IF_ANY
+
+]]></system-out>
+  </testcase>
+  <testcase name="testExceptionProperties" classname="com.healthanalyzer.api.GitHubClientTest" time="0.001"/>
+  <testcase name="testClientCreation" classname="com.healthanalyzer.api.GitHubClientTest" time="0.002"/>
+</testsuite>
