@@ -1,0 +1,17 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.model;
+
+public record IssueStats(int totalOpen, int totalClosed, int recentlyClosed, int recentlyOpened, double avgResponseTimeHours, int staleIssues, int backlogSize) {
+   public int total() {
+      return this.totalOpen + this.totalClosed;
+   }
+
+   public double openRatio() {
+      int total = this.total();
+      return total == 0 ? (double)0.0F : (double)this.totalOpen / (double)total;
+   }
+
+   public boolean hasBacklog() {
+      return this.staleIssues > 5;
+   }
+}
