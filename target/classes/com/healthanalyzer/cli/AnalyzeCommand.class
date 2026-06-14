@@ -1,0 +1,111 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+package com.healthanalyzer.cli;
+
+import com.healthanalyzer.config.AppConfig;
+import com.healthanalyzer.config.OutputFormat;
+import com.healthanalyzer.model.HealthReport;
+import com.healthanalyzer.report.ReportService;
+import com.healthanalyzer.service.HealthAnalysisService;
+import java.util.concurrent.Callable;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
+
+@Command(
+   name = "analyze",
+   description = {"Analyze a GitHub repository health"},
+   mixinStandardHelpOptions = true
+)
+public class AnalyzeCommand implements Callable<Integer> {
+   @Option(
+      names = {"-t", "--token"},
+      description = {"GitHub API token"}
+   )
+   private String token;
+   @Option(
+      names = {"-f", "--format"},
+      description = {"Output format (table, json, markdown)"}
+   )
+   private String format = "table";
+   @Option(
+      names = {"-o", "--output"},
+      description = {"Output file path"}
+   )
+   private String outputFile;
+   @Option(
+      names = {"-v", "--verbose"},
+      description = {"Verbose logging"}
+   )
+   private boolean verbose;
+   @Parameters(
+      paramLabel = "OWNER/REPO",
+      description = {"Repository in format 'owner/repo'"}
+   )
+   private String repoPath;
+
+   public AnalyzeCommand() {
+   }
+
+   public Integer call() throws Exception {
+      System.out.println("\u001b[96m\n\ud83d\udd0d \u001b[1mStarting Health Analysis...\u001b[0m");
+      if (this.repoPath != null && !this.repoPath.isEmpty()) {
+         String[] parts = this.repoPath.split("/");
+         if (parts.length != 2) {
+            System.out.println("\u001b[91m❌ \u001b[1mError: Invalid repository format. Use 'owner/repo'\u001b[0m");
+            return 1;
+         } else {
+            String owner = parts[0];
+            String repo = parts[1].replace(".git", "");
+            System.out.println("\u001b[93m\ud83d\udce6 Repository: \u001b[96m" + owner + "/\u001b[1m" + repo + "\u001b[0m");
+            String githubToken = this.token;
+            if (githubToken == null || githubToken.isEmpty()) {
+               githubToken = System.getenv("GITHUB_TOKEN");
+               if (githubToken != null && !githubToken.isEmpty()) {
+                  System.out.println("\u001b[92m✓ \u001b[97mUsing GitHub token from environment\u001b[0m");
+               }
+            }
+
+            AppConfig config = AppConfig.builder().githubToken(githubToken).verboseLogging(this.verbose).defaultFormat(OutputFormat.fromString(this.format)).build();
+            HealthAnalysisService service = new HealthAnalysisService(config);
+            ReportService reportService = new ReportService();
+
+            Integer var12;
+            try {
+               try {
+                  System.out.println("\u001b[96m⏳ \u001b[97mFetching data from GitHub...\u001b[0m");
+                  HealthReport report = service.analyze(owner, repo);
+                  OutputFormat outputFormat = OutputFormat.fromString(this.format);
+                  String content = reportService.generateReport(report, outputFormat);
+                  if (this.outputFile != null && !this.outputFile.isEmpty()) {
+                     reportService.saveReport(content, this.outputFile);
+                     System.out.println("\u001b[92m\n✅ \u001b[1mReport saved to: \u001b[97m" + this.outputFile + "\u001b[0m");
+                  } else {
+                     System.out.println("\n\u001b[92m" + "═".repeat(60) + "\u001b[0m");
+                     reportService.printReport(content);
+                  }
+
+                  System.out.println("\u001b[92m\n✅ \u001b[1mAnalysis Complete!\u001b[0m");
+                  System.out.println("\u001b[95m   Developed by: xEdi | https://github.com/xedi1\u001b[0m");
+                  var12 = 0;
+                  return var12;
+               } catch (Exception e) {
+                  System.out.println("\u001b[91m\n❌ \u001b[1mError: \u001b[97m" + e.getMessage() + "\u001b[0m");
+                  if (this.verbose) {
+                     e.printStackTrace();
+                  }
+               }
+
+               var12 = 1;
+            } finally {
+               service.close();
+            }
+
+            return var12;
+         }
+      } else {
+         System.out.println("\u001b[91m❌ \u001b[1mError: Repository path is required\u001b[0m");
+         System.out.println("\u001b[97m   Usage: analyze OWNER/REPO\u001b[0m");
+         return 1;
+      }
+   }
+}
